@@ -28,17 +28,31 @@ def home():
 def get_processed_age_group():
     race = request.args.get('race', default = "white", type=str)
     idx = races.index(race) + 1 # the code that makes the tables is not 0 based
+
+    # THIS CODE DID NOT WORK. The measurable difference is literally 0 I need 
+    # higher precision to calculate it and even if I did get the number, that over 
+    # main memory which was 93 MB (this is a t2.micro) is basically like 100K's of rows
+
+    # max_in_bytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    # max_in_mb = max_in_bytes / 1024
+    # print(max_in_mb)
+
+    # sql_query = f"SELECT * FROM table_1_{idx}_both LIMIT 1"
+    # mycursor.execute(sql_query)
+    # result = mycursor.fetchall()
+    # one_row = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    # print(one_row)
     sql_query = f"SELECT * FROM table_1_{idx}_both LIMIT 6"
     print(race)
     print(sql_query)
     mycursor.execute(sql_query)
     result = mycursor.fetchall()
+    time.sleep(2) # artificial delay to simulate actual processing of big data
     df = pd.DataFrame(result)
     df.columns = [i[0] for i in mycursor.description]
     df = df.set_index('Age groups').transpose()
     df = df.iloc[2:,:]
     dfJSON = df.to_json(orient='split')
-    time.sleep(2) # artificial delay to simulate actual processing of big data
     return jsonify(json.loads(dfJSON))
 
 if __name__ == '__main__':
